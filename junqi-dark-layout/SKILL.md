@@ -14,6 +14,7 @@ Generate one valid 2-player 军棋暗棋 layout from the user's requested style/
    - The board has 25 legal cells and 5 fixed forbidden cells.
    - 军旗 must be in a 大本营.
    - 军旗 only in row 6 column 2 or row 6 column 4.
+   - 大本营里的棋子不能移动。所以大本营只放军旗，或者放不重要的子（如排长）当填位。绝对不能把大子、工兵、炸弹放进大本营。
    - 地雷 only in the last two rows and never in a 大本营.
    - 炸弹 cannot be in the first row.
 3. Generate dynamically from the user's requested style and focus instead of reusing a fixed template.
@@ -22,6 +23,8 @@ Generate one valid 2-player 军棋暗棋 layout from the user's requested style/
    - Do not cluster all big pieces together.
    - Keep at least one useful 工兵 path for late-game mine clearing.
    - Spread pressure so one side is not obviously weak.
+   - 司令、军长等核心大子不放后两排（第5、6排），避免被困或过早暴露。后两排只放地雷、军旗、排长/连长等小子和最多一个工兵。
+   - 大子要有行动空间，不能被自己的地雷、军旗、大本营围死。
 5. Produce the result as an image first when the user asked for a picture. Include a short text explanation only if helpful.
 
 ## Standard 25-cell board model
@@ -125,6 +128,7 @@ Before returning the answer, verify:
 - Count of each piece is correct.
 - Forbidden cells remain forbidden.
 - 军旗 is in row 6 column 2 or row 6 column 4.
+- 大本营（row 6 column 2 和 row 6 column 4）只能放军旗或排长/连长等不重要的子，绝不能放大子、工兵、炸弹。
 - All 地雷 are only in row 5 or row 6 columns 1/3/5.
 - No 地雷 is placed in a 大本营.
 - No 炸弹 is in row 1.
