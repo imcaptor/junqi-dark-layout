@@ -10,22 +10,12 @@ Generate one valid 2-player 军棋暗棋 layout from the user's requested style/
 ## Workflow
 
 1. Assume the standard 2-player 25-cell dark-chess board unless the user specifies a different platform.
-2. Respect these constraints unless the user gives different platform rules:
-   - The board has 25 legal cells and 5 fixed forbidden cells.
-   - 军旗 must be in a 大本营.
-   - 军旗 only in row 6 column 2 or row 6 column 4.
-   - 大本营里的棋子不能移动。所以大本营只放军旗，或者放不重要的子（如排长）当填位。绝对不能把大子、工兵、炸弹放进大本营。
-   - 地雷 only in the last two rows and never in a 大本营.
-   - 炸弹 cannot be in the first row.
+2. Separate three layers clearly when generating:
+   - **硬规则**: objective placement rules that define legality.
+   - **默认布阵偏好**: practical default heuristics that usually produce stronger layouts.
+   - **可变策略 / 例外**: deliberate deviations used for诱撞、迷惑、奇袭 or style-specific plans.
 3. Generate dynamically from the user's requested style and focus instead of reusing a fixed template.
-4. Prefer a balanced, practical layout over a flashy one:
-   - Hide the flag naturally.
-   - Do not cluster all big pieces together.
-   - Keep at least one useful 工兵 path for late-game mine clearing.
-   - Spread pressure so one side is not obviously weak.
-   - 司令、军长等核心大子不放后两排（第5、6排），避免被困或过早暴露。后两排只放地雷、军旗、排长/连长等小子和最多一个工兵。
-   - 大子要有行动空间，不能被自己的地雷、军旗、大本营围死。
-5. Produce the result as an image first when the user asked for a picture. Include a short text explanation only if helpful.
+4. Produce the result as an image first when the user asked for a picture. Include a short text explanation only if helpful.
 
 ## Standard 25-cell board model
 
@@ -69,6 +59,37 @@ Use this exact 25-piece set unless the user specifies a different variant:
 - 炸弹 ×2
 - 地雷 ×3
 - 军旗 ×1
+
+## Hard rules
+
+These define whether a layout is legal on the standard 25-cell board:
+
+- The board has 25 legal cells and 5 fixed forbidden cells.
+- 军旗 must be in a 大本营.
+- 军旗 only in row 6 column 2 or row 6 column 4.
+- 地雷 only in the last two rows and never in a 大本营.
+- 炸弹 cannot be in the first row.
+- 大本营里的棋子不能移动。
+
+## Default layout heuristics
+
+Use these as the normal baseline unless the user asks for a special trick layout:
+
+- 大本营优先用于放军旗和低价值子，例如排长或连长。
+- 前排不要过多堆纯小子，至少要保留基本压制力。
+- 大子不要全部扎堆在同一路，避免一条线被看穿。
+- 重要棋子要有行动空间，不能被自己的地雷、军旗、大本营或低价值子围死。
+- 工兵不要全部沉到底线，尽量保留至少一个较快能参与排雷或穿插的工兵。
+- 后两排主要承担护旗、藏雷、迷惑和埋伏功能。
+
+## Variable strategies and exceptions
+
+These are intentional deviations that may be strong in some layouts:
+
+- 司令一般不放后两排，但这属于默认偏好，不是棋盘硬规则。
+- 军长、师长、旅长等中高价值棋子可以根据阵型需要放在后两排，用于诱撞、埋伏或制造错觉。
+- 工兵可以放在后两排，尤其在迷惑阵或拐出奇袭路线里；关键是不宜把三个工兵都放成废子。
+- 某些阴阵、迷惑阵会故意让局部布局看起来像雷区、小子区或废子区。
 
 ## Output rules
 
@@ -125,14 +146,20 @@ Then generate one fresh legal layout instead of reusing a static preset.
 
 Before returning the answer, verify:
 
+### Legality checks
 - Count of each piece is correct.
 - Forbidden cells remain forbidden.
 - 军旗 is in row 6 column 2 or row 6 column 4.
-- 大本营（row 6 column 2 和 row 6 column 4）只能放军旗或排长/连长等不重要的子，绝不能放大子、工兵、炸弹。
 - All 地雷 are only in row 5 or row 6 columns 1/3/5.
 - No 地雷 is placed in a 大本营.
 - No 炸弹 is in row 1.
 - The exported layout contains 30 entries only because the 5 forbidden cells are marked as `禁` for rendering.
+
+### Heuristic checks
+- 大本营中的非军旗棋子，默认应为低价值子（如排长、连长），除非用户明确要求特殊策略。
+- 司令默认不放在后两排；若放置，需要有明确的迷惑或诱撞理由。
+- 工兵不要全部沉到底线，尽量保留至少一个较快可出动的工兵。
+- 重要大子不应被自己的地雷、军旗、大本营结构或低价值子围死。
 
 ## Files
 
