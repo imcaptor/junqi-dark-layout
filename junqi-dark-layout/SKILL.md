@@ -1,51 +1,63 @@
 ---
 name: junqi-dark-layout
-description: Generate a legal Chinese Army Chess (军棋) dark-layout setup on the standard 25-cell 2-player board and render it as a clear image card. Use when the user wants a 军棋暗棋摆阵, asks for a ready-to-use hidden setup, gives style/focus preferences, or wants the final answer as an image instead of only text.
+description: 生成合法的中国军棋双人 25 格暗棋摆阵，并渲染成清晰图片卡片。用于用户想要军棋暗棋摆阵、想按风格或侧重生成阵型、想直接拿到可分享图片、或需要规则约束下的合法布局时。
 ---
 
-# Junqi Dark Layout
+# 军棋暗棋摆阵
 
-Generate one valid 2-player 军棋暗棋 layout from the user's requested style/focus and output it as a clean practical card image.
+根据用户要求的风格与侧重，生成一个合法的双人军棋 25 格暗棋阵型，并输出为清晰、实用的图片卡片。
 
-## Workflow
+## 工作原则
 
-1. Assume the standard 2-player 25-cell dark-chess board unless the user specifies a different platform.
-2. Separate three layers clearly when generating:
-   - **硬规则**: objective placement rules that define legality.
-   - **默认布阵偏好**: practical default heuristics that usually produce stronger layouts.
-   - **可变策略 / 例外**: deliberate deviations used for诱撞、迷惑、奇袭 or style-specific plans.
-3. Generate dynamically from the user's requested style and focus instead of reusing a fixed template.
-4. Produce the result as an image first when the user asked for a picture. Include a short text explanation only if helpful.
+1. 默认采用双人军棋标准 25 格棋盘，除非用户明确指定其他平台规则。
+2. 始终区分三层内容：
+   - **硬规则**：决定阵型是否合法，绝不能违反。
+   - **默认布阵偏好**：通常更稳、更实用的经验性建议。
+   - **可变策略 / 特殊例外**：为了迷惑、诱撞、奇袭等目的而故意偏离默认偏好。
+3. 必须优先通过脚本动态生成阵型，不要复用死模板，不要凭空手写一个阵型冒充生成结果。
+4. 如果用户要图片，先生成阵型，再渲染成图片；文字解释保持简短实用。
 
-## Standard 25-cell board model
+## 严格执行要求
 
-Use a 5-column by 6-row own-side layout with these legal cells:
+- **优先调用 `scripts/generate_layout.py` 生成阵型。**
+- **不要仅凭语言模型自由编造 25 格阵型。**
+- **如果脚本生成失败，应明确说明失败，不要手工补一个“看起来像对的”阵型。**
+- **如果发现结果违反硬规则，直接判定为非法，不要返回。**
 
-- Row 1: columns 1 2 3 4 5
-- Row 2: columns 1 3 5
-- Row 3: columns 1 2 4 5
-- Row 4: columns 1 3 5
-- Row 5: columns 1 2 3 4 5
-- Row 6: columns 1 2 3 4 5
+## 标准 25 格棋盘模型
 
-Fixed forbidden cells:
-- Row 2 column 2
-- Row 2 column 4
-- Row 3 column 3
-- Row 4 column 2
-- Row 4 column 4
+己方区域按 6 行 × 5 列表示，共 30 个位置，其中 25 个可摆棋，5 个固定禁摆位。
 
-大本营 positions:
-- Row 6 column 2
-- Row 6 column 4
+可摆位置：
 
-地雷 legal cells:
-- Row 5 columns 1 2 3 4 5
-- Row 6 columns 1 3 5
+- 第 1 排：第 1、2、3、4、5 列
+- 第 2 排：第 1、3、5 列
+- 第 3 排：第 1、2、4、5 列
+- 第 4 排：第 1、3、5 列
+- 第 5 排：第 1、2、3、4、5 列
+- 第 6 排：第 1、2、3、4、5 列
 
-## Piece set
+固定禁摆位：
 
-Use this exact 25-piece set unless the user specifies a different variant:
+- 第 2 排第 2 列
+- 第 2 排第 4 列
+- 第 3 排第 3 列
+- 第 4 排第 2 列
+- 第 4 排第 4 列
+
+大本营位置：
+
+- 第 6 排第 2 列
+- 第 6 排第 4 列
+
+地雷合法位置：
+
+- 第 5 排第 1、2、3、4、5 列
+- 第 6 排第 1、3、5 列
+
+## 棋子集合
+
+除非用户明确指定其他变体，否则使用以下标准 25 子：
 
 - 司令 ×1
 - 军长 ×1
@@ -60,108 +72,113 @@ Use this exact 25-piece set unless the user specifies a different variant:
 - 地雷 ×3
 - 军旗 ×1
 
-## Hard rules
+## 硬规则（违反任意一条即为非法阵型）
 
-These define whether a layout is legal on the standard 25-cell board:
+1. 棋盘必须保持 25 个可摆位置和 5 个固定禁摆位。
+2. 军旗只能放在大本营，即第 6 排第 2 列或第 6 排第 4 列。
+3. 地雷只能放在后两排，且只能放在规定雷区位置。
+4. 地雷不得放入大本营。
+5. **炸弹不得放在第一排任意位置。**
+6. 大本营中的棋子不可移动，因此默认只放军旗或低价值子。
+7. 禁摆位必须保持为禁摆位，不能放入任何棋子。
 
-- The board has 25 legal cells and 5 fixed forbidden cells.
-- 军旗 must be in a 大本营.
-- 军旗 only in row 6 column 2 or row 6 column 4.
-- 地雷 only in the last two rows and never in a 大本营.
-- 炸弹 cannot be in the first row.
-- 大本营里的棋子不能移动。
+## 默认布阵偏好
 
-## Default layout heuristics
-
-Use these as the normal baseline unless the user asks for a special trick layout:
+除非用户明确要求特殊策略，否则优先遵循这些默认偏好：
 
 - 大本营优先用于放军旗和低价值子，例如排长或连长。
-- 前排不要过多堆纯小子，至少要保留基本压制力。
-- 大子不要全部扎堆在同一路，避免一条线被看穿。
-- 重要棋子要有行动空间，不能被自己的地雷、军旗、大本营或低价值子围死。
-- 工兵不要全部沉到底线，尽量保留至少一个较快能参与排雷或穿插的工兵。
+- 前排不要堆太多纯小子，至少保留基础压制力。
+- 大子不要全挤在同一路，避免被一条线看穿。
+- 重要棋子应保留行动空间，不要被自己的地雷、军旗、大本营或低价值子围死。
+- 工兵尽量不要全部沉到底线，最好保留至少一个相对更活的工兵。
 - 后两排主要承担护旗、藏雷、迷惑和埋伏功能。
 
-## Variable strategies and exceptions
+## 可变策略与例外
 
-These are intentional deviations that may be strong in some layouts:
+以下情况允许偏离默认偏好，但不允许违反硬规则：
 
-- 司令一般不放后两排，但这属于默认偏好，不是棋盘硬规则。
-- 军长、师长、旅长等中高价值棋子可以根据阵型需要放在后两排，用于诱撞、埋伏或制造错觉。
-- 工兵可以放在后两排，尤其在迷惑阵或拐出奇袭路线里；关键是不宜把三个工兵都放成废子。
-- 某些阴阵、迷惑阵会故意让局部布局看起来像雷区、小子区或废子区。
+- 司令通常不放后两排，但这只是偏好，不是绝对禁令。
+- 军长、师长、旅长等中高价值棋子可以为了诱撞、埋伏、迷惑而放在后两排。
+- 工兵可以放在后两排，尤其在迷惑阵、阴阵或奇袭路线设计中；但不要轻易把三个工兵都放成废子。
+- 某些阴阵、迷惑阵会故意让局部看起来像雷区、小子区或废子区。
 
-## Output rules
+## 输出要求
 
-- If the user wants a layout only, return one fresh generated setup.
-- If the user wants options, offer 2-3 styles at most: 稳健 / 激进 / 阴阵.
-- If an image is requested, generate the layout first with `scripts/generate_layout.py`, then render it with `scripts/render_layout.py`.
-- Keep explanations concise and practical.
-- Avoid pretending platform-specific certainty when the exact app rules are unknown.
+- 如果用户只要一个阵型，返回 1 个新生成的合法阵型即可。
+- 如果用户想对比风格，最多给 2 到 3 个选项，例如：稳健 / 激进 / 阴阵。
+- 如果用户要求图片，先运行 `scripts/generate_layout.py`，再运行 `scripts/render_layout.py`。
+- 解释尽量短、实用，不要讲空话。
+- 对未知平台规则不要装作确定，必要时明确说明采用的是标准 25 格模型。
 
-## Dynamic generation
+## 动态生成方式
 
-Generate a fresh layout first, then render it.
+先生成阵型，再渲染图片。
 
-Example:
+示例：
 
 ```bash
 python3 scripts/generate_layout.py --style 激进 --focus 迷惑 > /tmp/junqi.json
 python3 scripts/render_layout.py \
   --title "军棋暗棋摆阵" \
   --subtitle "激进型｜偏迷惑" \
-  --layout '...30-cell JSON array including 禁 for forbidden cells...' \
+  --layout '...包含 30 个位置的 JSON 数组，其中 5 个禁摆位标记为 禁...' \
   --notes '["...", "...", "..."]' \
   --output /tmp/junqi-layout.png
 ```
 
-Supported style values:
+支持的风格值：
+
 - `稳健`
 - `激进`
 - `阴阵`
 - `均衡`
 
-Supported focus values:
+支持的侧重值：
+
 - `均衡`
 - `保旗`
 - `中攻`
 - `侧攻`
 - `迷惑`
 
-The renderer produces a clean practical card image:
-- readable 6×5 board with the 25 legal cells
-- forbidden cells shown as 禁摆位
-- 大本营 / 雷区 / 首排限制 visually distinguished
-- short notes at the bottom
+渲染图应具备这些特征：
 
-## Default behavior
+- 清晰可读的 6×5 棋盘展示
+- 25 个可摆位与 5 个禁摆位显示明确
+- 大本营、雷区、首排限制区分明显
+- 底部保留简短说明
 
-If the user gives no preference:
-- style = `稳健`
-- focus = `均衡`
+## 默认行为
 
-Then generate one fresh legal layout instead of reusing a static preset.
+如果用户没有给出偏好：
 
-## Validation checklist
+- 风格默认 `稳健`
+- 侧重默认 `均衡`
 
-Before returning the answer, verify:
+应生成一个新的合法阵型，不要复用静态预设阵型。
 
-### Legality checks
-- Count of each piece is correct.
-- Forbidden cells remain forbidden.
-- 军旗 is in row 6 column 2 or row 6 column 4.
-- All 地雷 are only in row 5 or row 6 columns 1/3/5.
-- No 地雷 is placed in a 大本营.
-- No 炸弹 is in row 1.
-- The exported layout contains 30 entries only because the 5 forbidden cells are marked as `禁` for rendering.
+## 返回前校验清单
 
-### Heuristic checks
-- 大本营中的非军旗棋子，默认应为低价值子（如排长、连长），除非用户明确要求特殊策略。
-- 司令默认不放在后两排；若放置，需要有明确的迷惑或诱撞理由。
-- 工兵不要全部沉到底线，尽量保留至少一个较快可出动的工兵。
+在返回结果前，必须逐项确认：
+
+### 合法性校验
+
+- 每种棋子的数量是否正确。
+- 5 个禁摆位是否仍然保持为禁摆位。
+- 军旗是否只在第 6 排第 2 列或第 6 排第 4 列。
+- 所有地雷是否都只在合法雷区。
+- 是否存在地雷被放进大本营。
+- **是否存在炸弹被放在第一排。若有，直接判定非法，禁止返回。**
+- 输出的 30 格数组是否只是为了渲染而包含 5 个 `禁` 标记。
+
+### 偏好性校验
+
+- 大本营中的非军旗棋子，默认应为低价值子，除非用户明确要求特殊策略。
+- 司令默认不放后两排；如果放置，应有明确迷惑或诱撞理由。
+- 工兵最好不要全部沉到底线。
 - 重要大子不应被自己的地雷、军旗、大本营结构或低价值子围死。
 
-## Files
+## 文件说明
 
-- `scripts/generate_layout.py`: generate one fresh legal layout from style/focus hints on the standard 25-cell board.
-- `scripts/render_layout.py`: render one layout card image from JSON layout input.
+- `scripts/generate_layout.py`：根据风格与侧重生成一个合法阵型。
+- `scripts/render_layout.py`：把阵型 JSON 渲染成图片卡片。
