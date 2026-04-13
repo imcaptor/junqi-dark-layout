@@ -172,6 +172,17 @@ scripts/package_skill.py junqi-dark-layout
 
 也就是说，Python 不再是主生成器，而是裁判和出图工具。
 
+## 推荐调用流程
+
+推荐按照下面顺序使用：
+
+1. 由大模型输出一个 30 格 `layout` JSON
+2. 使用 `validate_layout.py` 校验
+3. 若失败，把 `errors` 回喂给大模型并重试 2~3 次
+4. 校验通过后，再用 `render_layout.py` 生成图片
+
+推荐让大模型只输出 JSON，不要夹带大段说明文字。
+
 ## 公开仓库前的说明
 
 这个仓库当前主要包含：
