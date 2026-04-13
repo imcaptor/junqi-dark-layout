@@ -28,19 +28,23 @@
 
 ## 效果预览
 
-下面是 3 张典型的阵型卡片效果图：
+下面是 4 张最新测试阵型卡片效果图：
 
-### 示例一：激进型
+### 示例一：稳健型
 
-![示例一：激进型](examples/example-1-aggressive.png)
+![示例一：稳健型](examples/v2-stable-test.png)
 
-### 示例二：均衡型
+### 示例二：激进型
 
-![示例二：均衡型](examples/example-2-balanced.png)
+![示例二：激进型](examples/v2-aggressive-test.png)
 
-### 示例三：偏防守型
+### 示例三：阴阵型
 
-![示例三：偏防守型](examples/example-3-defensive.png)
+![示例三：阴阵型](examples/v2-tricky-test.png)
+
+### 示例四：均衡型
+
+![示例四：均衡型](examples/v2-balanced-test.png)
 
 ## 功能简介
 
