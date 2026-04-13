@@ -25,6 +25,22 @@
 - `junqi-dark-layout/scripts/render_layout.py`：把阵型渲染成图片卡片
 - `junqi-dark-layout.skill`：已打包好的 skill 文件
 
+## 效果预览
+
+下面是 3 张典型的阵型卡片效果图：
+
+### 示例一：激进型
+
+![示例一：激进型](examples/example-1-aggressive.png)
+
+### 示例二：均衡型
+
+![示例二：均衡型](examples/example-2-balanced.png)
+
+### 示例三：偏防守型
+
+![示例三：偏防守型](examples/example-3-defensive.png)
+
 ## 功能简介
 
 这个 skill 解决两件事：

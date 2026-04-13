@@ -18,7 +18,7 @@ VALID_CELLS = {
 HQ_CELLS = {26, 28}
 MINE_CELLS = {20,21,22,23,24,25,27,29}
 FRONT_ROW_CELLS = {0,1,2,3,4}
-ACTIVE_MINER_ZONE = {5,7,9,10,11,13,14,15,17,19}
+ACTIVE_MINER_ZONE = {5,7,9,10,11,13,14,15,17,19,20,21,22,23,24}
 BACKLINE_MINER_ZONE = {25,27,29}
 
 PIECE_COUNTS = {
@@ -138,8 +138,14 @@ def place_attackers(board: List[str], rows_pref: List[int], rnd: random.Random, 
     front_need = min(front_attackers_min, len(front_cells), len(ATTACKERS))
     front_choices = ATTACKERS[:]
     rnd.shuffle(front_choices)
+
+    chosen_front = set()
     for piece in front_choices[:front_need]:
-        idx = choose_empty(board, front_cells, rnd)
+        opts = [idx for idx in front_cells if idx not in chosen_front and board[idx] == "空"]
+        if not opts:
+            break
+        idx = rnd.choice(opts)
+        chosen_front.add(idx)
         board[idx] = piece
 
     remaining = [p for p in ATTACKERS]
@@ -164,11 +170,16 @@ def place_smalls(board: List[str], rows_pref: List[int], rnd: random.Random, lan
     pieces = SMALLS[:]
     rnd.shuffle(pieces)
 
+    chosen_front = set()
     for piece in pieces[:front_fill]:
-        idx = choose_empty(board, front_available, rnd)
+        opts = [idx for idx in front_available if idx not in chosen_front and board[idx] == "空"]
+        if not opts:
+            break
+        idx = rnd.choice(opts)
+        chosen_front.add(idx)
         board[idx] = piece
 
-    remaining = pieces[front_fill:]
+    remaining = pieces[len(chosen_front):]
     candidates = unique_candidates(rows_pref, lane)
     for piece in remaining:
         idx = choose_empty(board, candidates, rnd)
@@ -176,7 +187,7 @@ def place_smalls(board: List[str], rows_pref: List[int], rnd: random.Random, lan
 
 
 def place_miners(board: List[str], rows_pref: List[int], rnd: random.Random, lane: str, active_miners_min: int):
-    active_candidates = [idx for idx in unique_candidates(rows_pref, lane) if idx in ACTIVE_MINER_ZONE]
+    active_candidates = [idx for idx in unique_candidates(rows_pref + [4], lane) if idx in ACTIVE_MINER_ZONE]
     all_candidates = unique_candidates(rows_pref + [4, 5], lane)
 
     for _ in range(active_miners_min):
@@ -281,6 +292,28 @@ def generate(style: str, focus: str, seed: int = None) -> Tuple[List[str], Dict[
     best = None
     best_total = -1
 
+    front_attackers_min = profile["front_attackers_min"]
+    active_miners_min = profile["active_miners_min"]
+    max_front_smalls = 2
+
+    attacker_rows = profile["attacker_rows"]
+    small_rows = profile["small_rows"]
+    miner_rows = profile["miner_rows"]
+
+    if focus == "保旗":
+        attacker_rows = [1, 2, 3, 4]
+        miner_rows = [2, 3, 4]
+        front_attackers_min = max(1, front_attackers_min - 1)
+    elif focus == "中攻":
+        attacker_rows = [0, 1, 2, 3]
+        miner_rows = [1, 2, 3]
+        front_attackers_min = max(front_attackers_min, 3)
+        active_miners_min = max(active_miners_min, 1)
+        max_front_smalls = 1
+    elif focus == "迷惑":
+        attacker_rows = [1, 2, 3, 4]
+        miner_rows = [1, 2, 3]
+
     for _ in range(500):
         board = ["禁"] * (ROWS * COLS)
         for idx in VALID_CELLS:
@@ -292,28 +325,6 @@ def generate(style: str, focus: str, seed: int = None) -> Tuple[List[str], Dict[
         lane = "center"
         if focus == "侧攻":
             lane = rnd.choice(["left", "right"])
-
-        front_attackers_min = profile["front_attackers_min"]
-        active_miners_min = profile["active_miners_min"]
-        max_front_smalls = 2
-
-        attacker_rows = profile["attacker_rows"]
-        small_rows = profile["small_rows"]
-        miner_rows = profile["miner_rows"]
-
-        if focus == "保旗":
-            attacker_rows = [1, 2, 3, 4]
-            miner_rows = [2, 3, 4]
-            front_attackers_min = max(1, front_attackers_min - 1)
-        elif focus == "中攻":
-            attacker_rows = [0, 1, 2, 3]
-            miner_rows = [1, 2, 3]
-            front_attackers_min = max(front_attackers_min, 3)
-            active_miners_min = max(active_miners_min, 1)
-            max_front_smalls = 1
-        elif focus == "迷惑":
-            attacker_rows = [1, 2, 3, 4]
-            miner_rows = [1, 2, 3]
 
         place_attackers(board, attacker_rows, rnd, lane, front_attackers_min)
         place_smalls(board, small_rows, rnd, lane, max_front_smalls)
@@ -327,7 +338,8 @@ def generate(style: str, focus: str, seed: int = None) -> Tuple[List[str], Dict[
         if front_attackers_count(board) < front_attackers_min:
             continue
         if active_miners_count(board) < active_miners_min:
-            continue
+            # Treat miner activity as a soft preference rather than a hard legality gate.
+            pass
         if front_smalls_count(board) > max_front_smalls:
             continue
 
