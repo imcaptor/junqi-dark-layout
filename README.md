@@ -1,6 +1,6 @@
 # junqi-dark-layout
 
-一个用于生成中国军棋（双人 25 格暗棋）摆阵并渲染成图片卡片的 OpenClaw / Codex AgentSkill。
+一个用于生成中国军棋（双人 25 格暗棋）摆阵、做硬规则校验并渲染成图片卡片的 OpenClaw / Codex AgentSkill。
 
 ## 这个仓库里有什么
 
@@ -21,7 +21,8 @@
 其中：
 
 - `junqi-dark-layout/SKILL.md`：skill 主说明
-- `junqi-dark-layout/scripts/generate_layout.py`：按风格/侧重动态生成合法阵型
+- `junqi-dark-layout/scripts/generate_layout.py`：旧版 Python 阵型生成器（V2 中不再作为首选主路径）
+- `junqi-dark-layout/scripts/validate_layout.py`：对阵型做硬规则校验
 - `junqi-dark-layout/scripts/render_layout.py`：把阵型渲染成图片卡片
 - `junqi-dark-layout.skill`：已打包好的 skill 文件
 
@@ -43,10 +44,11 @@
 
 ## 功能简介
 
-这个 skill 解决两件事：
+这个 skill 在 V2 中主要解决三件事：
 
-1. 生成一个**合法**的军棋暗棋摆阵
-2. 输出成**清晰、可直接分享**的阵型图片
+1. 由**大模型生成**更有策略感的军棋暗棋摆阵
+2. 由 **Python 严格校验**阵型是否合法
+3. 输出成**清晰、可直接分享**的阵型图片
 
 支持的风格：
 
@@ -101,34 +103,41 @@ pip install pillow
 
 ## 直接运行示例
 
-### 1）生成一个阵型 JSON
+### 1）先准备一个阵型 JSON
+
+V2 推荐流程不是直接依赖 Python 生成，而是：
+
+- 先由大模型生成一个 `layout` 数组
+- 再交给 Python 校验
+- 校验通过后再渲染图片
+
+### 2）校验阵型是否合法
 
 ```bash
-python3 junqi-dark-layout/scripts/generate_layout.py --style 稳健 --focus 均衡
+python3 junqi-dark-layout/scripts/validate_layout.py \
+  --layout '["连长","师长","排长","团长","司令","炸弹","禁","工兵","禁","旅长","连长","工兵","禁","军长","营长","师长","禁","炸弹","禁","旅长","地雷","地雷","团长","营长","排长","工兵","军旗","连长","排长","地雷"]'
 ```
 
-输出示例（节选）：
+示例输出：
 
 ```json
 {
-  "style": "稳健",
-  "focus": "均衡",
-  "layout": ["连长", "师长", "排长", "团长", "司令", "炸弹", "禁", "工兵", "禁", "旅长", "连长", "工兵", "禁", "军长", "营长", "师长", "禁", "炸弹", "禁", "旅长", "地雷", "地雷", "团长", "营长", "排长", "工兵", "军旗", "连长", "排长", "地雷"],
-  "scores": {
-    "隐蔽": 69,
-    "防守": 85,
-    "进攻": 74,
-    "工兵机动": 60
-  },
-  "notes": [
-    "风格：稳健｜侧重：均衡｜军旗在第6排第2列。",
-    "前排进攻子 2 个，前中场可动工兵 1 个；隐蔽/防守/进攻约为 69/85/74。",
-    "已限制前排小子过多，并强制保留至少一个前中场工兵。"
-  ]
+  "valid": true,
+  "errors": [],
+  "checks": {
+    "layout_length_ok": true,
+    "cell_values_known": true,
+    "forbidden_cells_ok": true,
+    "valid_cells_filled": true,
+    "piece_counts_ok": true,
+    "flag_in_hq": true,
+    "mines_legal": true,
+    "bombs_not_in_front_row": true
+  }
 }
 ```
 
-### 2）渲染成图片
+### 3）渲染成图片
 
 ```bash
 python3 junqi-dark-layout/scripts/render_layout.py \
@@ -152,6 +161,16 @@ scripts/package_skill.py junqi-dark-layout
 ```
 
 如果你的环境里没有这套脚本，也可以直接把 skill 目录单独拿去使用。
+
+## V2 架构说明
+
+当前推荐架构是：
+
+- **大模型**：负责生成具体阵型
+- **Python**：负责硬规则校验
+- **Python**：负责图片渲染
+
+也就是说，Python 不再是主生成器，而是裁判和出图工具。
 
 ## 公开仓库前的说明
 
