@@ -2,6 +2,22 @@
 
 一个用于生成中国军棋（双人 25 格暗棋）摆阵、做硬规则校验并渲染成图片卡片的 OpenClaw / Codex AgentSkill。
 
+## 安装
+
+### 通过 ClawHub 安装（推荐）
+
+```bash
+clawhub install junqi-dark-layout
+```
+
+### 手动安装
+
+将 `junqi-dark-layout/` 目录复制到 `~/.openclaw/skills/` 下：
+
+```bash
+cp -r junqi-dark-layout ~/.openclaw/skills/
+```
+
 ## 这个仓库里有什么
 
 仓库采用“外层仓库 + 内层 skill 目录”的结构：
@@ -154,17 +170,7 @@ python3 junqi-dark-layout/scripts/render_layout.py \
 
 ## 在 OpenClaw / Codex 中使用
 
-如果你是把它当 AgentSkill 用，核心文件是：
-
-- `junqi-dark-layout/SKILL.md`
-
-通常可按 skill 标准方式打包：
-
-```bash
-scripts/package_skill.py junqi-dark-layout
-```
-
-如果你的环境里没有这套脚本，也可以直接把 skill 目录单独拿去使用。
+推荐通过上方的 [安装](#安装) 方式一键安装。安装后核心文件是 `junqi-dark-layout/SKILL.md`，OpenClaw 会自动加载。
 
 ## V2 架构说明
 
@@ -187,26 +193,6 @@ scripts/package_skill.py junqi-dark-layout
 
 推荐让大模型只输出 JSON，不要夹带大段说明文字。
 
-## 公开仓库前的说明
-
-这个仓库当前主要包含：
-
-- 规则说明
-- 本地 Python 脚本
-- 打包产物
-
-适合公开展示和分享，但仍建议在改成 public 之前做这些检查：
-
-1. 确认没有提交测试图片、临时输出、日志文件
-2. 确认没有提交本地路径、账号信息、访问令牌
-3. 确认 `.DS_Store`、`__pycache__/`、临时目录都被 `.gitignore` 忽略
-4. 如果不想公开打包产物，可去掉 `junqi-dark-layout.skill`
-
 ## License
 
-如果你准备公开发布，建议补一个许可证文件，例如：
-
-- MIT（最宽松，最适合分享）
-- Apache-2.0（也很常见）
-
-如果你愿意，我可以下一步直接帮你补一个 `LICENSE`（推荐 MIT）。
+MIT
