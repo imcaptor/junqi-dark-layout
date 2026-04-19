@@ -109,17 +109,12 @@ def validate_layout(layout):
     if not bombs_not_in_front_row:
         errors.append("炸弹不能放在第一排")
 
-    # HQ pieces cannot move, so HQ should only hold 军旗 or low-value pieces
-    # (typically 排长/连长), never big pieces / 工兵 / 炸弹
-    hq_piece_ok = True
-    forbidden_hq_pieces = {"司令", "军长", "师长", "旅长", "团长", "营长", "工兵", "炸弹"}
-    for idx in HQ_CELLS:
-        if layout[idx] in forbidden_hq_pieces:
-            hq_piece_ok = False
-            break
+    # HQ pieces cannot move, so enforce a stronger rule:
+    # one HQ must be 军旗, the other HQ must be 排长.
+    hq_piece_ok = set(layout[idx] for idx in HQ_CELLS) == {"军旗", "排长"}
     checks["hq_piece_ok"] = hq_piece_ok
     if not hq_piece_ok:
-        errors.append("大本营只允许放军旗或低价值子（排长/连长），不能放大子、工兵、炸弹")
+        errors.append("两个大本营必须且只能分别放：军旗、排长。因为大本营棋子不能动，排长是最小牺牲")
 
     important_pieces_not_trapped = True
     trapped_important_positions = []
