@@ -18,7 +18,7 @@ HQ_CELLS = {26, 28}
 MINE_CELLS = {20,21,22,23,24,25,27,29}
 FRONT_ROW_CELLS = {0,1,2,3,4}
 IMMOBILE_CELLS = HQ_CELLS | {idx for idx in MINE_CELLS}
-IMPORTANT_PIECES = {"司令", "军长", "师长", "旅长", "团长", "营长"}
+IMPORTANT_PIECES = {"司令", "军长", "师长", "旅长", "团长", "营长", "工兵"}
 
 PIECE_COUNTS = {
     "司令": 1,
