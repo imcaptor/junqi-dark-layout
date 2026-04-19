@@ -17,6 +17,8 @@ VALID_CELLS = {
 HQ_CELLS = {26, 28}
 MINE_CELLS = {20,21,22,23,24,25,27,29}
 FRONT_ROW_CELLS = {0,1,2,3,4}
+IMMOBILE_CELLS = HQ_CELLS | {idx for idx in MINE_CELLS}
+IMPORTANT_PIECES = {"司令", "军长", "师长", "旅长", "团长", "营长"}
 
 PIECE_COUNTS = {
     "司令": 1,
@@ -118,6 +120,26 @@ def validate_layout(layout):
     checks["hq_piece_ok"] = hq_piece_ok
     if not hq_piece_ok:
         errors.append("大本营只允许放军旗或低价值子（排长/连长），不能放大子、工兵、炸弹")
+
+    important_pieces_not_trapped = True
+    trapped_important_positions = []
+    for idx, piece in enumerate(layout):
+        if piece not in IMPORTANT_PIECES:
+            continue
+        left_idx = idx - 1
+        right_idx = idx + 1
+        if col_of := (idx % COLS):
+            pass
+        same_row_left = left_idx >= 0 and (left_idx // COLS) == (idx // COLS)
+        same_row_right = right_idx < ROWS * COLS and (right_idx // COLS) == (idx // COLS)
+        left_blocked = same_row_left and left_idx in IMMOBILE_CELLS and layout[left_idx] in {"地雷", "军旗", "排长", "连长"}
+        right_blocked = same_row_right and right_idx in IMMOBILE_CELLS and layout[right_idx] in {"地雷", "军旗", "排长", "连长"}
+        if left_blocked and right_blocked:
+            important_pieces_not_trapped = False
+            trapped_important_positions.append(f"{piece}@第{idx // COLS + 1}排第{idx % COLS + 1}列")
+    checks["important_pieces_not_trapped"] = important_pieces_not_trapped
+    if not important_pieces_not_trapped:
+        errors.append("重要的子不能被封死在不能动的棋子之间，尤其不能夹在地雷和大本营棋子之间：" + "，".join(trapped_important_positions))
 
     valid = all(checks.values())
     return {
